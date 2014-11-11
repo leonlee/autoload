@@ -11,7 +11,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/1]).
+-export([start_link/0,start/0]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -32,7 +32,8 @@
 %% @end
 %%--------------------------------------------------------------------
 
-start_link(Path) ->
+start_link() ->
+    Path = autoload_app:autoload_path(),
     gen_server:start_link({local, ?SERVER}, ?MODULE, Path, []).
 
 %%%===================================================================
@@ -141,3 +142,7 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+start() ->
+    application:start(autoload).
+

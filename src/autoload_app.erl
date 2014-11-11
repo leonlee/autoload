@@ -3,15 +3,15 @@
 -behaviour(application).
 
 %% Application callbacks
--export([start/2, stop/1]).
+-export([start/2, stop/1,autoload_path/0]).
 
 %% ===================================================================
 %% Application callbacks
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
+    autoload_deps:ensure(),
     ensure_start(inotify),
-    autoload:start_link(),
     autoload_sup:start_link().
 
 
@@ -30,7 +30,8 @@ ensure_start(App) ->
 
 
 autoload_path() ->
-    application:get_env(inotify,autoload_path).
+    {ok,Path} = application:get_env(autoload,autoload_path),
+    Path.
 
 
 

@@ -41,7 +41,7 @@ start_link() ->
 init(Path) ->
     ok = filelib:ensure_dir(Path),
     Ref = inotify:watch(Path),
-    inotify:print_events(Ref),
+    %%inotify:print_events(Ref),
     beam_change(Ref),
     {ok, #state{ref = Ref}}.
 
@@ -68,6 +68,7 @@ code_change(_OldVsn, State, _Extra) ->
 beam_change(Ref) ->
     inotify_evt:add_handler(Ref, ?MODULE, []).
 
-inotify_event([], Ref, {Masks, Cookie, OptionalName}) ->
-    io:format("[BeamChange] - ~p - ~p ~p ~p~n", [Ref, Masks, Cookie, OptionalName]).
-
+inotify_event([], _Ref,{inotify_msg, [modify], _Cookie, FileName}) ->
+    io:format("operate:~p~n",[FileName]);
+inotify_event([], _Ref,{inotify_msg, _Masks, _Cookie, _OptionalName}) ->
+    ok.

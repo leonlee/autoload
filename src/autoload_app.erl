@@ -14,11 +14,9 @@ start(_StartType, _StartArgs) ->
     ensure_start(inotify),
     autoload_sup:start_link().
 
-
 stop(_State) ->
     application:stop(inotify),
     ok.
-
 
 ensure_start(App) ->
     case application:start(App) of
@@ -27,7 +25,6 @@ ensure_start(App) ->
         {error, {already_started, App}} ->
             ok
     end.
-
 
 autoload_path() ->
     {ok,Path} = application:get_env(autoload,autoload_path),

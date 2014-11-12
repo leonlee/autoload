@@ -84,28 +84,41 @@ inotify_event([], _Ref,{inotify_msg, _Masks, _Cookie, _OptionalName}) ->
 connect_to_nodes() ->
     NotConnects = autoload_app:autoload_nodes() -- nodes(),
     lists:foldl(fun(Node,NoConnect) ->
-                        ?LOG("~p~n",[Node]),
-                        case net_kernel:connect_node(Node) of
-                            true -> NoConnect;
-                            false -> [Node|NoConnect];
-                            ignored ->[Node|NoConnect]
-                        end
+        case net_kernel:connect_node(Node) of
+            true -> NoConnect;
+            false -> [Node|NoConnect];
+            ignored ->[Node|NoConnect]
+        end
                 end,[],NotConnects).
 
 do_modify_file(FileName) ->
-    case filename:extension(FileName) of
-        ".beam" ->
+    case is_beam(FileName) of
+       true ->
             NoConnects = connect_to_nodes(),
-            Beam = list_to_atom(lists:reverse(lists:reverse(FileName) --"maeb.")) ,
+            Beam = file_to_beam(FileName),
             c:nl(Beam),
-            case NoConnects of
-                [] -> ok;
-                T -> ?LOG("can't update file:~p on ~p~n",[FileName,T])
-            end;
-        _ ->
+           not_connect_node(NoConnects,FileName);
+        false ->
             ok
     end.
 
-do_delete_file(_FileName) ->
-    ok.
+do_delete_file(FileName) ->
+    case is_beam(FileName) of
+        true ->
+            NoConnects = connect_to_nodes(),
+            Beam = file_to_beam(FileName),
+            rpc:multicall(c,l,[Beam]),
+            not_connect_node(NoConnects,FileName);
+        false -> ok
+    end.
 
+file_to_beam(FileName) ->
+    list_to_atom(lists:reverse(lists:reverse(FileName) --"maeb.")) .
+
+is_beam(FileName) ->
+    filename:extension(FileName) =:= ".beam".
+
+not_connect_node([],_FileName) ->
+    ok;
+not_connect_node(Nodes,FileName) ->
+    ?LOG("can't update file:~p on ~p~n",[FileName,Nodes]).

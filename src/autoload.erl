@@ -25,9 +25,11 @@
 
 -define(SERVER, ?MODULE).
 
--define(LOG(Format,Args),io:format(Format,Args)).
+-define(LOG(Format,Args),file:write_file(autoload_app:autoload_log(),[lists:flatten(io_lib:format(Format,Args))],[append])).
 
--record(state, {ref}).
+%%-define(LOG(Format,Args),io:format(Format,Args)).
+
+-record(state, {ref,file_handle}).
 
 start() ->
     application:start(autoload).
@@ -41,10 +43,11 @@ start_link() ->
 %%%===================================================================
 
 init(Path) ->
-    ?LOG("Path~p~n",[Path]),
     ok = filelib:ensure_dir(Path),
+    backup(),
     Ref = inotify:watch(Path),
     %%inotify:print_events(Ref),
+    ?LOG("Path:~p~n",[Path]),
     beam_change(Ref),
     {ok, #state{ref = Ref}}.
 
@@ -71,6 +74,7 @@ beam_change(Ref) ->
     inotify_evt:add_handler(Ref, ?MODULE, []).
 
 inotify_event([], _Ref,{inotify_msg, [modify], _Cookie, FileName}) ->
+    
     ?LOG("modify:~p~n",[FileName]),
     do_modify_file(FileName);
 
@@ -82,8 +86,12 @@ inotify_event([], _Ref,{inotify_msg, _Masks, _Cookie, _OptionalName}) ->
     ok.
 
 connect_to_nodes() ->
-    NotConnects = autoload_app:autoload_nodes() -- nodes(),
+    NodeCookies = autoload_app:autoload_node_cookies(),
+    Nodes = [begin Node end||{Node,_Cookie} <- NodeCookies],
+    NotConnects = Nodes -- nodes(),
     lists:foldl(fun(Node,NoConnect) ->
+        {_,Cookie} = lists:keyfind(Node,1,NodeCookies),
+        erlang:set_cookie(Node,Cookie),
         case net_kernel:connect_node(Node) of
             true -> NoConnect;
             false -> [Node|NoConnect];
@@ -122,3 +130,14 @@ not_connect_node([],_FileName) ->
     ok;
 not_connect_node(Nodes,FileName) ->
     ?LOG("can't update file:~p on ~p~n",[FileName,Nodes]).
+
+
+backup() ->
+    FileName = autoload_app:autoload_log(),
+    case file:read_file_info(FileName) of
+        {ok, _FileInfo} ->
+            ok = file:rename(FileName, FileName ++ ".bak"),
+            ok;
+        {error, _Reason} ->
+            ok
+    end.

@@ -5,7 +5,7 @@
 %% Application callbacks
 -export([start/2, stop/1]).
 
--export([autoload_path/0,autoload_nodes/0]).
+-export([autoload_path/0,autoload_node_cookies/0,autoload_log/0]).
 %% ===================================================================
 %% Application callbacks
 %% ===================================================================
@@ -30,8 +30,10 @@ ensure_start(App) ->
 autoload_path() ->
     {ok,Path} = application:get_env(autoload,autoload_path),
     Path.
-autoload_nodes() ->
-    {ok,NodeName} = application:get_env(autoload,nodes_name),
-    NodeName.
+autoload_node_cookies() ->
+    {ok,NodeCookies} = application:get_env(autoload,node_cookie),
+    NodeCookies.
 
-
+autoload_log() ->
+    {ok,Log} = application:get_env(autoload,log),
+    Log.

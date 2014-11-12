@@ -5,5 +5,7 @@
               {applications,[kernel,stdlib]},
               {mod,{autoload_app,[]}},
               {env,[{autoload_path,"/home/ubuntu/github/autoload/dev_patch/"},
-                    {nodes_name,[test1@localhost,test2@localhost]}]},
+                    {node_cookie,[{test1@localhost,best},
+                                  {test2@localhost,best}]},
+                    {log,"./console.log"}]},
               {modules,[autoload,autoload_app,autoload_deps,autoload_sup]}]}.

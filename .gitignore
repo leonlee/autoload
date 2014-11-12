@@ -5,6 +5,8 @@ deps
 *.plt
 erl_crash.dump
 .rebar
+*.log
+*.txt
 
 # =========================
 # Operating System Files

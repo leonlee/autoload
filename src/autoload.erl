@@ -41,6 +41,7 @@ start_link() ->
 %%%===================================================================
 
 init(Path) ->
+    ?LOG("Path~p~n",[Path]),
     ok = filelib:ensure_dir(Path),
     Ref = inotify:watch(Path),
     %%inotify:print_events(Ref),
@@ -70,29 +71,33 @@ beam_change(Ref) ->
     inotify_evt:add_handler(Ref, ?MODULE, []).
 
 inotify_event([], _Ref,{inotify_msg, [modify], _Cookie, FileName}) ->
-    io:format("modify:~p~n",[FileName]),
+    ?LOG("modify:~p~n",[FileName]),
     do_modify_file(FileName);
 
 inotify_event([], _Ref,{inotify_msg, [delete], _Cookie, FileName}) ->
-    io:format("delete:~p~n",[FileName]),
+    ?LOG("delete:~p~n",[FileName]),
     do_delete_file(FileName);
 inotify_event([], _Ref,{inotify_msg, _Masks, _Cookie, _OptionalName}) ->
+    ?LOG("unknow:~p~n",[_Masks]),
     ok.
 
 connect_to_nodes() ->
     NotConnects = autoload_app:autoload_nodes() -- nodes(),
     lists:foldl(fun(Node,NoConnect) ->
-        case net_kernel:connect_node(Node) of
-            true -> NoConnect;
-            false -> [Node|NoConnect]
-        end
-                end,{[],[]},NotConnects).
+                        ?LOG("~p~n",[Node]),
+                        case net_kernel:connect_node(Node) of
+                            true -> NoConnect;
+                            false -> [Node|NoConnect];
+                            ignored ->[Node|NoConnect]
+                        end
+                end,[],NotConnects).
 
 do_modify_file(FileName) ->
     case filename:extension(FileName) of
         ".beam" ->
             NoConnects = connect_to_nodes(),
-                c:nl(FileName--".beam"),
+            Beam = list_to_atom(lists:reverse(lists:reverse(FileName) --"maeb.")) ,
+            c:nl(Beam),
             case NoConnects of
                 [] -> ok;
                 T -> ?LOG("can't update file:~p on ~p~n",[FileName,T])

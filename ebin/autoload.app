@@ -4,5 +4,6 @@
               {registered,[]},
               {applications,[kernel,stdlib]},
               {mod,{autoload_app,[]}},
-              {env,[{autoload_path,"."}]},
+              {env,[{autoload_path,"/home/ubuntu/github/autoload/dev_patch/"},
+                    {nodes_name,[test1@localhost,test2@localhost]}]},
               {modules,[autoload,autoload_app,autoload_deps,autoload_sup]}]}.

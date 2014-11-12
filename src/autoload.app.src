@@ -8,5 +8,5 @@
                   stdlib
                  ]},
   {mod, { autoload_app, []}},
-  {env, [{autoload_path,"."}]}
+  {env, [{autoload_path,"~/dev_patch/"},{nodes_name,[test1,test2]}]}
  ]}.

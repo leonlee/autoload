@@ -3,8 +3,9 @@
 -behaviour(application).
 
 %% Application callbacks
--export([start/2, stop/1,autoload_path/0]).
+-export([start/2, stop/1]).
 
+-export([autoload_path/0,autoload_nodes/0]).
 %% ===================================================================
 %% Application callbacks
 %% ===================================================================
@@ -29,6 +30,8 @@ ensure_start(App) ->
 autoload_path() ->
     {ok,Path} = application:get_env(autoload,autoload_path),
     Path.
-
+autoload_nodes() ->
+    {ok,NodeName} = application:get_env(autoload,nodes_name),
+    NodeName.
 
 

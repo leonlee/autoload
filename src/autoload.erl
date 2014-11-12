@@ -25,6 +25,8 @@
 
 -define(SERVER, ?MODULE).
 
+-define(LOG(Format,Args),io:format(Format,Args)).
+
 -record(state, {ref}).
 
 start() ->
@@ -44,7 +46,6 @@ init(Path) ->
     %%inotify:print_events(Ref),
     beam_change(Ref),
     {ok, #state{ref = Ref}}.
-
 
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
@@ -69,6 +70,37 @@ beam_change(Ref) ->
     inotify_evt:add_handler(Ref, ?MODULE, []).
 
 inotify_event([], _Ref,{inotify_msg, [modify], _Cookie, FileName}) ->
-    io:format("operate:~p~n",[FileName]);
+    io:format("modify:~p~n",[FileName]),
+    do_modify_file(FileName);
+
+inotify_event([], _Ref,{inotify_msg, [delete], _Cookie, FileName}) ->
+    io:format("delete:~p~n",[FileName]),
+    do_delete_file(FileName);
 inotify_event([], _Ref,{inotify_msg, _Masks, _Cookie, _OptionalName}) ->
     ok.
+
+connect_to_nodes() ->
+    NotConnects = autoload_app:autoload_nodes() -- nodes(),
+    lists:foldl(fun(Node,NoConnect) ->
+        case net_kernel:connect_node(Node) of
+            true -> NoConnect;
+            false -> [Node|NoConnect]
+        end
+                end,{[],[]},NotConnects).
+
+do_modify_file(FileName) ->
+    case filename:extension(FileName) of
+        ".beam" ->
+            NoConnects = connect_to_nodes(),
+                c:nl(FileName--".beam"),
+            case NoConnects of
+                [] -> ok;
+                T -> ?LOG("can't update file:~p on ~p~n",[FileName,T])
+            end;
+        _ ->
+            ok
+    end.
+
+do_delete_file(_FileName) ->
+    ok.
+

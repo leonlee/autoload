@@ -10,7 +10,7 @@ autoload
 <br>
 2. **Configure**:<br>
 you only need configure the ./src/autoload.app.src file:<br>
-&emsp;    ` {env, [{autoload_path,"./dev_patch/"},'<br>
+&emsp;    ` {env, [{autoload_path,"./dev_patch/"},`<br>
 &emsp;    `{node_cookie,[{test1@localhost,best},{test2@localhost,best}]},`<br>
 &emsp;         `{log,"./log/console.log"}]}`<br>
 2.1 make sure the **autoload_path** under the directory **autoload/**, put the beams here;<br>

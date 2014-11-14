@@ -4,8 +4,8 @@
               {registered,[]},
               {applications,[kernel,stdlib]},
               {mod,{autoload_app,[]}},
-              {env,[{autoload_path,"/home/ubuntu/github/autoload/dev_patch/"},
+              {env,[{autoload_path,"./dev_patch/"},
                     {node_cookie,[{test1@localhost,best},
                                   {test2@localhost,best}]},
-                    {log,"./console.log"}]},
+                    {log,"./log/console.log"}]},
               {modules,[autoload,autoload_app,autoload_deps,autoload_sup]}]}.

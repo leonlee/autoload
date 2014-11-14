@@ -8,6 +8,6 @@
                   stdlib
                  ]},
   {mod, { autoload_app, []}},
-  {env, [{autoload_path,"/home/ubuntu/github/autoload/dev_patch/"},{node_cookie,[{test1@localhost,best},{test2@localhost,best}]},
-         {log,"./console.log"}]}
+  {env, [{autoload_path,"./dev_patch/"},{node_cookie,[{test1@localhost,best},{test2@localhost,best}]},
+         {log,"./log/console.log"}]}
  ]}.

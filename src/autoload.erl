@@ -74,7 +74,6 @@ beam_change(Ref) ->
     inotify_evt:add_handler(Ref, ?MODULE, []).
 
 inotify_event([], _Ref,{inotify_msg, [modify], _Cookie, FileName}) ->
-    
     ?LOG("modify:~p~n",[FileName]),
     do_modify_file(FileName);
 
@@ -82,7 +81,7 @@ inotify_event([], _Ref,{inotify_msg, [delete], _Cookie, FileName}) ->
     ?LOG("delete:~p~n",[FileName]),
     do_delete_file(FileName);
 inotify_event([], _Ref,{inotify_msg, _Masks, _Cookie, _OptionalName}) ->
-    ?LOG("unknow:~p~n",[_Masks]),
+    %%?LOG("unknow:~p~n",[_Masks]),
     ok.
 
 connect_to_nodes() ->
@@ -90,47 +89,43 @@ connect_to_nodes() ->
     Nodes = [begin Node end||{Node,_Cookie} <- NodeCookies],
     NotConnects = Nodes -- nodes(),
     lists:foldl(fun(Node,NoConnect) ->
-        {_,Cookie} = lists:keyfind(Node,1,NodeCookies),
-        erlang:set_cookie(Node,Cookie),
-        case net_kernel:connect_node(Node) of
-            true -> NoConnect;
-            false -> [Node|NoConnect];
-            ignored ->[Node|NoConnect]
-        end
+                        {_,Cookie} = lists:keyfind(Node,1,NodeCookies),
+                        erlang:set_cookie(Node,Cookie),
+                        case net_kernel:connect_node(Node) of
+                            true -> NoConnect;
+                            false -> [Node|NoConnect];
+                            ignored ->[Node|NoConnect]
+                        end
                 end,[],NotConnects).
 
 do_modify_file(FileName) ->
-    case is_beam(FileName) of
-       true ->
+    case file_to_beam(FileName) of
+        {ok, Beam } ->
             NoConnects = connect_to_nodes(),
-            Beam = file_to_beam(FileName),
             c:nl(Beam),
-           not_connect_node(NoConnects,FileName);
-        false ->
+            ?LOG("File:~p update on:~p~nFile:~p not update on ~p~n",[FileName,nodes(),FileName,NoConnects]);
+        ignore  ->
             ok
     end.
 
 do_delete_file(FileName) ->
-    case is_beam(FileName) of
-        true ->
+    case file_to_beam(FileName) of
+        {ok, Beam } ->
             NoConnects = connect_to_nodes(),
-            Beam = file_to_beam(FileName),
             rpc:multicall(c,l,[Beam]),
-            not_connect_node(NoConnects,FileName);
-        false -> ok
+            ?LOG("File:~p delete on:~p~nFile:~p not deltete on:~p~n",[FileName,nodes(),FileName,NoConnects]);
+        ignore -> 
+            ?LOG("Ignore delete File:~p~n",[FileName])
     end.
 
+
 file_to_beam(FileName) ->
-    list_to_atom(lists:reverse(lists:reverse(FileName) --"maeb.")) .
-
-is_beam(FileName) ->
-    filename:extension(FileName) =:= ".beam".
-
-not_connect_node([],_FileName) ->
-    ok;
-not_connect_node(Nodes,FileName) ->
-    ?LOG("can't update file:~p on ~p~n",[FileName,Nodes]).
-
+    case filename:extension(FileName) =:= ".beam" of
+        true ->
+            {ok,list_to_atom(lists:reverse(lists:reverse(FileName) --"maeb.")) };
+        false ->
+            ignore
+    end.
 
 backup() ->
     FileName = autoload_app:autoload_log(),
